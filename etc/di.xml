@@ -1,0 +1,469 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="TheVaultAppFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">TheVaultApp\Magento2\Model\Ui\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">TheVaultApp\Magento2\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">TheVaultApp\Magento2\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">TheVaultAppValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">TheVaultAppCommandPool</argument>
+            <!--<argument name="validatorPool" xsi:type="object">TheVaultAppValidatorPool</argument>-->
+        </arguments>
+    </virtualType>
+    <!-- END Payment Method Facade configuration -->
+
+    <!-- Configuration for Vault payments -->
+    <virtualType name="TheVaultAppVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">TheVaultApp\Magento2\Model\Ui\ConfigProvider::CC_VAULT_CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">TheVaultAppVaultPaymentConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVaultPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">TheVaultAppVaultPaymentValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppCreditCardVaultFacade" type="Magento\Vault\Model\Method\Vault">
+        <arguments>
+            <argument name="config" xsi:type="object">TheVaultAppVaultPaymentConfig</argument>
+            <argument name="code" xsi:type="const">TheVaultApp\Magento2\Model\Ui\ConfigProvider::CC_VAULT_CODE</argument>
+            <argument name="valueHandlerPool" xsi:type="object">TheVaultAppVaultPaymentValueHandlerPool</argument>
+            <argument name="vaultProvider" xsi:type="object">TheVaultAppFacade</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Configuration for Vault payments -->
+
+    <!-- Around Payments Plugin -->
+    <type name="Magento\Checkout\Model\GuestPaymentInformationManagement">
+        <plugin name="CkoGuestPaymentInformationManagement" type="TheVaultApp\Magento2\Plugin\GuestPaymentInformationManagement" />
+        </type>
+        <type name="Magento\Checkout\Model\PaymentInformationManagement">
+        <plugin name="CkoPaymentInformationManagement" type="TheVaultApp\Magento2\Plugin\PaymentInformationManagement" />
+    </type>
+    <!-- END Around Payments Plugin -->  
+
+    <!-- Configuration reader -->
+    <type name="TheVaultApp\Magento2\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">TheVaultApp\Magento2\Model\Ui\ConfigProvider::CODE</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="TheVaultAppConfig" type="TheVaultApp\Magento2\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">TheVaultApp\Magento2\Model\Ui\ConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Configuration reader -->
+
+    <!-- Transfer Factory -->
+    <virtualType name="TheVaultAppTransferFactory" type="TheVaultApp\Magento2\Gateway\Http\TransferFactory">
+        <arguments>
+            <argument name="config" xsi:type="object">TheVaultAppConfig</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Transfer Factory -->
+
+    <!-- Logger -->
+    <virtualType name="TheVaultAppLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">TheVaultAppConfig</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Logger -->
+
+    <!-- Client -->
+    <type name="TheVaultApp\Magento2\Gateway\Http\Client\AbstractTransaction">
+        <arguments>
+            <argument name="logger" xsi:type="object">TheVaultAppLogger</argument>
+        </arguments>
+    </type>
+    <!-- END Client -->
+
+    <!-- Commands infrastructure -->
+    <virtualType name="TheVaultAppCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">TheVaultAppAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">TheVaultAppCaptureCommand</item>
+                <item name="vault_authorize" xsi:type="string">TheVaultAppVaultAuthorizeCommand</item>
+                <item name="vault_capture" xsi:type="string">TheVaultAppVaultCaptureCommand</item>
+                <item name="refund" xsi:type="string">TheVaultAppRefundCommand</item>
+                <item name="void" xsi:type="string">TheVaultAppVoidCommand</item>
+                <item name="cancel" xsi:type="string">TheVaultAppVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Commands infrastructure -->
+
+    <!-- Command managers section for Vault -->
+    <virtualType name="TheVaultAppCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">TheVaultAppCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+        <arguments>
+            <argument name="executors" xsi:type="array">
+                <item name="thevaultapp" xsi:type="string">TheVaultAppCommandManager</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- TheVaultApp Commands -->
+
+    <virtualType name="TheVaultAppAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppAuthorizeRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\TokenAuthorizeTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppAuthorizeHandler</argument>
+            <argument name="validator" xsi:type="object">TheVaultApp\Magento2\Gateway\Validator\ResponseCodeStatusValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppCaptureRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\CaptureTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppCaptureHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppRefundRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\RefundTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppRefundHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppVoidRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\VoidTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppVoidHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- END TheVaultApp Commands -->
+
+    <!-- Vault Payment Commands -->
+    <virtualType name="TheVaultAppVaultAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppVaultAuthorizeRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\CardAuthorizeTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppVaultAuthorizeHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVaultCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">TheVaultAppCaptureRequest</argument>
+            <argument name="transferFactory" xsi:type="object">TheVaultAppTransferFactory</argument>
+            <argument name="client" xsi:type="object">TheVaultApp\Magento2\Gateway\Http\Client\CaptureTransaction</argument>
+            <argument name="handler" xsi:type="object">TheVaultAppCaptureHandler</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Vault Payment Commands -->
+
+    <!-- Request Builders -->
+    <virtualType name="TheVaultAppAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="card_token" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\CardTokenRequest</item>
+                <item name="payment" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\PaymentRequest</item>
+                <item name="amount" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\AmountRequest</item>
+                <item name="order_data" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\OrderDataRequest</item>
+                <item name="url_override" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\UrlOverrideRequest</item>
+                <item name="billing_details" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\BillingDetailsRequest</item>
+                <item name="shipping_details" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ShippingDetailsRequest</item>
+                <item name="meta_data" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\MetaDataRequest</item>
+                <item name="descriptor" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\DescriptorDataRequest</item>
+                <item name="3d_secure" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ThreeDSecureRequest</item>
+                <item name="vault" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\VaultRequest</item>
+                <item name="mada" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\MadaRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppCaptureRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="parent_charge_id" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ParentChargeIdRequest</item>
+                <item name="amount" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\AmountRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="parent_charge_id" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ParentChargeIdRequest</item>
+                <item name="amount" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\AmountRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVoidRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="parent_charge_id" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ParentChargeIdRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Request Builders -->
+
+    <!-- Vault Request Builders -->
+    <virtualType name="TheVaultAppVaultAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="card_vault" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\CardVaultRequest</item>
+                <item name="payment" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\PaymentRequest</item>
+                <item name="amount" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\AmountRequest</item>
+                <item name="order_data" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\OrderDataRequest</item>
+                <item name="url_override" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\UrlOverrideRequest</item>
+                <item name="billing_details" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\BillingDetailsRequest</item>
+                <item name="shipping_details" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ShippingDetailsRequest</item>
+                <item name="meta_data" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\MetaDataRequest</item>
+                <item name="descriptor" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\DescriptorDataRequest</item>
+                <item name="3d_secure" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\ThreeDSecureRequest</item>
+                <item name="mada" xsi:type="string">TheVaultApp\Magento2\Gateway\Request\MadaRequest</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Vault Request Builders -->
+
+    <!-- Value handlers infrastructure -->
+
+    <virtualType name="TheVaultAppValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">TheVaultAppConfigValueHandler</item>
+                <item name="can_void" xsi:type="string">TheVaultApp\Magento2\Gateway\Config\CanVoidHandler</item>
+                <item name="can_cancel" xsi:type="string">TheVaultApp\Magento2\Gateway\Config\CanVoidHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">TheVaultAppConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="3d_secure" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\ThreeDSecureDetailsHandler</item>
+                <item name="transaction" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\TransactionHandler</item>
+                <item name="vault_details" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\VaultDetailsHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppCaptureHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="transaction" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\TransactionHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppRefundHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="refund" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\RefundHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVoidHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="void" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\VoidHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppVaultAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="3d_secure" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\ThreeDSecureDetailsHandler</item>
+                <item name="transaction" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\TransactionHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Value handlers infrastructure -->
+
+    <!-- Validators -->
+    <virtualType name="TheVaultAppValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorComposite">
+        <arguments>
+            <argument name="validators" xsi:type="array"></argument>
+        </arguments>
+    </virtualType>
+    <!-- END Validators -->
+
+    <!-- Block configuration -->
+    <type name="TheVaultApp\Magento2\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">TheVaultAppConfig</argument>
+        </arguments>
+    </type>
+
+    <type name="TheVaultApp\Magento2\Block\Form">
+        <arguments>
+            <argument name="gatewayConfig" xsi:type="object">TheVaultApp\Magento2\Gateway\Config\Config</argument>
+        </arguments>
+    </type>
+    <!-- END Block configuration -->
+
+
+
+
+    <!-- ##### Web Hook Section ##### -->
+
+    <type name="TheVaultApp\Magento2\Model\Method\CallbackMethod">
+        <arguments>
+            <argument name="valueHandlerPool" xsi:type="object">TheVaultAppValueHandlerPool</argument>
+            <argument name="validator" xsi:type="object">TheVaultAppWebHookValidatorComposite</argument>
+            <argument name="commandPool" xsi:type="object">TheVaultAppWebHookCommandPool</argument>
+            <argument name="gatewayProvider" xsi:type="object">TheVaultAppFacade</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="TheVaultAppWebHookFacade" type="TheVaultApp\Magento2\Model\Method\CallbackMethod" />
+
+    <!-- Validators -->
+    <virtualType name="TheVaultAppWebHookValidatorComposite" type="Magento\Payment\Gateway\Validator\ValidatorComposite">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="authorization_key" xsi:type="string">TheVaultApp\Magento2\Gateway\Validator\AuthorizationKeyValidator</item>
+                <item name="event_type" xsi:type="string">TheVaultApp\Magento2\Gateway\Validator\EventTypeValidator</item>
+                <item name="code_status" xsi:type="string">TheVaultApp\Magento2\Gateway\Validator\CodeStatusValidator</item>
+                <item name="order_id" xsi:type="string">TheVaultApp\Magento2\Gateway\Validator\OrderIdValidator</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Validators -->
+
+    <!-- Commands -->
+    <virtualType name="TheVaultAppWebHookCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">TheVaultAppWebHookAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">TheVaultAppWebHookCaptureCommand</item>
+                <item name="refund" xsi:type="string">TheVaultAppWebHookRefundCommand</item>
+                <item name="void" xsi:type="string">TheVaultAppWebHookVoidCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppWebHookAuthorizeCommand" type="TheVaultApp\Magento2\Gateway\Command\WebHookCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">TheVaultAppAuthorizeHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppWebHookCaptureCommand" type="TheVaultApp\Magento2\Gateway\Command\WebHookCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">TheVaultAppWebHookCaptureHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppWebHookRefundCommand" type="TheVaultApp\Magento2\Gateway\Command\WebHookCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">TheVaultAppWebHookRefundHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppWebHookVoidCommand" type="TheVaultApp\Magento2\Gateway\Command\WebHookCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">TheVaultAppWebHookVoidHandler</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Commands -->
+
+    <!-- Handlers -->
+    <virtualType name="TheVaultAppWebHookRefundHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="refund_invoice" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\RefundInvoiceHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TheVaultAppWebHookVoidHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="cancel_order" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\CancelOrderHandler</item>
+                <item name="void" xsi:type="string">TheVaultApp\Magento2\Gateway\Response\VoidHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Handlers -->
+
+    <!-- Store Card Service -->
+    <type name="TheVaultApp\Magento2\Model\Service\StoreCardService">
+        <arguments>
+            <argument name="logger" xsi:type="object">TheVaultAppLogger</argument>
+        </arguments>
+    </type>
+    <!-- END Store Card Service -->
+
+    <!-- Mobile Payments API -->
+    <preference for="TheVaultApp\Magento2\Api\MobilePaymentInterface" type="TheVaultApp\Magento2\Model\Resource\MobilePayment" />
+    <!-- END Mobile Payments API -->
+
+    <!-- Accound dashboard plugin -->
+    <type name="Magento\Framework\View\Element\Html\Links">
+        <plugin sortOrder="1" name="CkoCustomerDashboardLinksManagement" type="TheVaultApp\Magento2\Plugin\CustomerDashboardLinksManagement"/>
+    </type>
+    <!-- END account dashboard plugin -->
+
+    <!-- Plans grid listing -->
+    <virtualType name="TheVaultApp\Magento2\Model\ResourceModel\Plan\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">cko_m2_plans</argument>
+            <argument name="resourceModel" xsi:type="string">TheVaultApp\Magento2\Model\ResourceModel\Plan</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="plans_grid_list_data_source" xsi:type="string">TheVaultApp\Magento2\Model\ResourceModel\Plan\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Subscriptions grid listing -->
+    <virtualType name="TheVaultApp\Magento2\Model\ResourceModel\Subscription\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">cko_m2_subscriptions</argument>
+            <argument name="resourceModel" xsi:type="string">TheVaultApp\Magento2\Model\ResourceModel\Subscription</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="subscriptions_grid_list_data_source" xsi:type="string">TheVaultApp\Magento2\Model\ResourceModel\Subscription\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+</config>

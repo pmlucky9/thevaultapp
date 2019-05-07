@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="thevaultapp" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Checkout with vault</label>
+
+                <comment>
+                    <![CDATA[
+                    <strong>Copyright © 2019 <a href="http://www.thevaultapp.com" target="_blank">www.thevaultapp.com</a> / <a href="mailto:support@thevaultapp.com">support@thevaultapp.com</a></strong><br />
+                    Thanks for choosing Vault Extensions.<br/><br/>
+                    <hr style="border-top: 1px solid #e3e3e3" />
+                  ]]>
+                </comment>
+
+                <group id="thevaultapp_base_settings" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+                    <label>Basic Settings</label>
+                    <attribute type="activity_path">payment/thevaultapp/active</attribute>
+
+                    <field id="active" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable this Solution</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/thevaultapp/active</config_path>
+                        <requires>
+                            <field id="public_key"/>
+                            <field id="secret_key"/>
+                            <field id="private_shared_key"/>
+                        </requires>
+                    </field>
+
+                    <field id="environment" translate="label" sortOrder="10" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Environment</label>
+                        <source_model>TheVaultApp\Magento2\Model\Adminhtml\Source\Environment</source_model>
+                        <config_path>payment/thevaultapp/environment</config_path>
+                    </field>
+
+                    <field id="title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/thevaultapp/title</config_path>
+                        <comment>Payment method title displayed to shoppers.</comment>
+                    </field>
+
+                    <!--
+                    <field id="integration" translate="label" sortOrder="40" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Integration</label>
+                        <source_model>TheVaultApp\Magento2\Model\Adminhtml\Source\Integration</source_model>
+                        <config_path>payment/thevaultapp/integration</config_path>
+                    </field>
+                    -->
+
+                    <!--
+                    <field id="theme_color" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Theme color</label>
+                        <config_path>payment/thevaultapp/theme_color</config_path>
+                        <comment>Provide a color code in hexadecimal format. Ex: #00b660.</comment>
+                        <depends>
+                            <field id="integration">hosted</field>
+                        </depends>
+                    </field>
+                    -->
+
+                    <!--
+                 	<field id="button_label" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button label</label>
+                        <config_path>payment/thevaultapp/button_label</config_path>
+                        <depends>
+                            <field id="integration">hosted</field>
+                        </depends>
+                    </field>
+                    -->
+
+                    <!--
+                 	<field id="box_title" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Payment window title</label>
+                        <config_path>payment/thevaultapp/box_title</config_path>
+                        <depends>
+                            <field id="integration">hosted</field>
+                        </depends>
+                    </field>
+                    -->
+
+                    <!--
+                 	<field id="box_subtitle" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Payment window subtitle</label>
+                        <config_path>payment/thevaultapp/box_subtitle</config_path>
+                        <depends>
+                            <field id="integration">hosted</field>
+                        </depends>
+                    </field>
+                    -->
+                </group>
+
+                <group id="thevaultapp_advanced_settings" translate="label" showInDefault="1" showInWebsite="1" sortOrder="3">
+                    <label>Advanced Settings</label>
+
+                    <field id="debug" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Debug</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/thevaultapp/debug</config_path>
+                    </field>
+
+                    <field id="thevaultapp_cc_vault_active" translate="label" sortOrder="10" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Vault Enabled</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/thevaultapp_cc_vault/active</config_path>
+                        <requires>
+                            <field id="active"/>
+                        </requires>
+                    </field>
+
+                    <field id="thevaultapp_cc_vault_title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Vault Title</label>
+                        <config_path>payment/thevaultapp_cc_vault/title</config_path>
+                        <depends>
+                            <field id="thevaultapp_cc_vault_active">1</field>
+                        </depends>
+                    </field>
+
+                </group>
+
+                <group id="thevaultapp_account_keys" translate="label" showInDefault="1" showInWebsite="1" sortOrder="7">
+                    <label>Account keys</label>
+
+                    <field id="store" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Store</label>
+                        <config_path>payment/thevaultapp/store</config_path>
+                    </field>
+
+                    <field id="businessname" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Business Name</label>
+                        <config_path>payment/thevaultapp/businessname</config_path>
+                    </field>
+
+                    <!--
+                    <field id="subid1" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Sub ID</label>
+                        <config_path>payment/thevaultapp/subid1</config_path>
+                    </field>
+                    -->
+
+                    <field id="public_key" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Api Url</label>
+                        <config_path>payment/thevaultapp/public_key</config_path>
+                    </field>
+
+                    <field id="secret_key" translate="label" sortOrder="10" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Api Key</label>
+                        <config_path>payment/thevaultapp/secret_key</config_path>
+                    </field>
+                </group>
+
+                <group id="thevaultapp_callback_urls" translate="label" showInDefault="1" showInWebsite="1" sortOrder="8">
+                    <label>Callbacks URLs</label>
+
+                    <field id="webhook_url" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <!--
+                        <label>Webhook Url</label>
+                        -->
+                        <label>Verify Callback</label>
+                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\WebhookUrl</frontend_model>
+                    </field>
+                    <!--
+                    <field id="redirection_url" translate="label" sortOrder="10" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Redirection Url</label>
+                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\RedirectionUrl</frontend_model>
+                    </field>
+
+                    <field id="redirection_fail_url" translate="label" sortOrder="20" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Redirection Fail Url</label>
+                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\RedirectionFailUrl</frontend_model>
+                    </field>
+                    -->
+                </group>
+
+                <group id="admin_method_settings" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="12">
+                    <attribute type="activity_path">payment/thevaultapp_admin_method/active</attribute>
+                </group>
+            </group>
+        </section>
+    </system>
+</config>

@@ -1,0 +1,17 @@
+
+
+.ddcommon {
+    border-radius: 0px !important;
+}
+
+.ddTitleText img {
+    max-width: 70px;
+}
+
+.dd .ddChild li img {
+    max-width: 70px !important;
+}
+
+.ddChild {
+    min-height: 150px;
+}

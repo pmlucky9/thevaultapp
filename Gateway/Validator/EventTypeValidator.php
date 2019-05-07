@@ -1,0 +1,30 @@
+<?php
+
+ 
+namespace TheVaultApp\Magento2\Gateway\Validator;
+
+use Magento\Payment\Gateway\Helper\SubjectReader;
+use TheVaultApp\Magento2\Model\Validator\Rule;
+
+class EventTypeValidator extends ResponseValidator
+{
+    const FAILED_KEY = 'failed';
+        
+    /**
+     * Returns the array of the rules.
+     *
+     * @return Rule[]
+     */
+    protected function rules() {
+        return [
+            new Rule('EventType Status', function(array $subject) {
+                $response       = SubjectReader::readResponse($subject);
+                $eventTypeParts = explode('.', $response['eventType']);
+                
+                return ! in_array(self::FAILED_KEY, $eventTypeParts, true);
+            }, __('TheVaultApp request failed.') ),
+        ];
+    }
+    
+}
+
