@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <css src="TheVaultApp_Magento2::css/main.css" />
+        <css src="TheVaultApp_Checkout::css/main.css" />
     </head>
     <body>
         <referenceBlock name="checkout.root">
@@ -21,7 +21,7 @@
                                                             <!-- merge payment method renders here -->
                                                             <item name="children" xsi:type="array">
                                                                 <item name="thevaultapp" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">TheVaultApp_Magento2/js/view/payment/thevaultapp</item>
+                                                                    <item name="component" xsi:type="string">TheVaultApp_Checkout/js/view/payment/thevaultapp</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="thevaultapp" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
@@ -29,14 +29,7 @@
                                                                     </item>
                                                                 </item>
                                                             </item>
-                                                        </item>
-                                                        <item name="additional-payment-validators" xsi:type="array">
-                                                            <item name="children" xsi:type="array">
-                                                                <item name="agreement-validator" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">TheVaultApp_Magento2/js/view/agreement-validation</item>
-                                                                </item>
-                                                            </item>
-                                                        </item>
+                                                        </item>                                                        
                                                     </item>
                                                 </item>
                                             </item>

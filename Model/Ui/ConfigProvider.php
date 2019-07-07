@@ -1,23 +1,17 @@
 <?php
 
 
-namespace TheVaultApp\Magento2\Model\Ui;
+namespace TheVaultApp\Checkout\Model\Ui;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Store\Model\StoreManagerInterface;
-use TheVaultApp\Magento2\Gateway\Config\Config;
-use TheVaultApp\Magento2\Model\Adapter\ChargeAmountAdapter;
+use TheVaultApp\Checkout\Gateway\Config\Config;
+use TheVaultApp\Checkout\Model\Adapter\ChargeAmountAdapter;
 
 class ConfigProvider implements ConfigProviderInterface {
 
     const CODE = 'thevaultapp';
-
-    const CC_VAULT_CODE = 'thevaultapp_cc_vault';
-
-    const THREE_DS_CODE = 'thevaultapp_3ds';
-
-    const CODE_ADMIN_METHOD = 'thevaultapp_admin_method';
 
     /**
      * @var Config
@@ -55,42 +49,15 @@ class ConfigProvider implements ConfigProviderInterface {
         return [
             'payment' => [
                 self::CODE => [
-                    'store'                  => $this->config->getStore(),
-                    'businessname'                  => $this->config->getBusinessName(),
-                    'subid'                  => $this->config->getSubId(),
+                    'store'                     => $this->config->getStore(),
+                    'subid'                     => $this->config->getSubId(),
                     'isActive'                  => $this->config->isActive(),
                     'debug_mode'                => $this->config->isDebugMode(),
                     'public_key'                => $this->config->getPublicKey(),
-                    'secret_key'                => $this->config->getSecretKey(),
-                    'hosted_url'                => $this->config->getHostedUrl(),
-                    'embedded_url'              => $this->config->getEmbeddedUrl(),
-                    'countrySpecificCardTypes'  => $this->config->getCountrySpecificCardTypeConfig(),
-                    'availableCardTypes'        => $this->config->getAvailableCardTypes(),
-                    'useCvv'                    => $this->config->isCvvEnabled(),
-                    'ccTypesMapper'             => $this->config->getCcTypesMapper(),
-                    'ccVaultCode'               => self::CC_VAULT_CODE,
-                    Config::CODE_3DSECURE       => [
-                        'enabled' => $this->config->isVerify3DSecure(),
-                    ],
-                    'attemptN3D' => $this->config->isAttemptN3D(),
-                    'integration'               => [
-                        'type'          => $this->config->getIntegration(),
-                        'isHosted'      => $this->config->isHostedIntegration(),
-                    ],
-                    'priceAdapter' => ChargeAmountAdapter::getConfigArray(),
-                    'design_settings' => $this->config->getDesignSettings(),
-                    'accepted_currencies' => $this->config->getAcceptedCurrencies(),
-                    'payment_mode' => $this->config->getPaymentMode(),
-                    'quote_value' => $this->getQuoteValue(),
-                    'quote_currency' => $this->getQuoteCurrency(),
-                    'embedded_theme' => $this->config->getEmbeddedTheme(),
-                    'embedded_css' => $this->config->getEmbeddedCss(),
-                    'css_file' => $this->config->getCssFile(),
-                    'custom_css' => $this->config->getCustomCss(),
-                    'vault_title' => $this->config->getVaultTitle(),
-                    'order_creation' => $this->config->getOrderCreation(),
-                    'card_autosave' => $this->config->isCardAutosave(),
-                    'integration_language' => $this->config->getIntegrationLanguage()
+                    'secret_key'                => $this->config->getSecretKey(),                    
+                    'quote_value'               => $this->getQuoteValue(),
+                    'quote_currency'            => $this->getQuoteCurrency(),
+                    'vault_title'               => $this->config->getVaultTitle(),                   
                 ],
             ],
         ];
@@ -115,25 +82,5 @@ class ConfigProvider implements ConfigProviderInterface {
     public function getQuoteCurrency() {
         // Return the quote currency
         return $this->storeManager->getStore()->getCurrentCurrencyCode();
-    }
-
-    /**
-     * Returns the success URL override.
-     *
-     * @return string
-     */
-    public function getSuccessUrl() {
-        $url = $this->storeManager->getStore()->getBaseUrl() . 'thevaultapp/payment/verify';
-        return $url;
-    }
-
-    /**
-     * Returns the fail URL override.
-     *
-     * @return string
-     */
-    public function getFailUrl() {
-        $url = $this->storeManager->getStore()->getBaseUrl() . 'thevaultapp/payment/fail';
-        return $url;
     }
 }

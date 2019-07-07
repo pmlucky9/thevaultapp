@@ -11,3 +11,60 @@
 #cko-form-holder {
     margin-bottom: 10px;
 }
+
+.thevaultapp-logo {
+    background-image: url(../images/logo.png);
+    background-repeat: no-repeat;
+    height: 300px;
+}
+
+.thevaultapp-hide {
+    display: none
+}
+
+div.thevaultapp-place-order {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    border: #a5a5a5 1px solid;
+    padding: 5px;
+    border-radius: 32px;
+}
+
+.checkout-payment-method .payment-method-content > .actions-toolbar > .primary div.thevaultapp-place-order .action.primary {
+    color: #a5a5a5;
+    background-color: #ffffff;
+    border-radius:26px;
+    border-color: #a5a5a5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 15px;
+}
+
+.checkout-payment-method .payment-method-content > .actions-toolbar > .primary div.thevaultapp-place-order .action.primary span {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.checkout-payment-method .payment-method-content > .actions-toolbar > .primary div.thevaultapp-place-order .logo-btn {
+    background-image: url(../images/logo-button.png);
+    background-repeat: no-repeat;
+    background-size: auto 26px;
+    height: 26px;
+    width: 65px;
+    padding: 0;
+    margin:0 10px 0 0;
+
+}
+
+.checkout-payment-method .payment-method-content > .actions-toolbar > .primary div.thevaultapp-place-order .separator {
+    display: inline-block;
+    width: 1px;
+    min-width: 1px;
+    max-width: 1px;
+    height: 25px;
+    background-color: #a5a5a5;
+    overflow: hidden
+}

@@ -1,30 +1,23 @@
 <?php
 
+namespace TheVaultApp\Checkout\Model\Adminhtml\Source;
 
-namespace TheVaultApp\Magento2\Model\Adminhtml\Source;
+use Magento\Payment\Model\Method\AbstractMethod;
 
-use Magento\Framework\Option\ArrayInterface;
-
-class PaymentAction implements ArrayInterface
+/**
+ * Class PaymentAction
+ */
+class PaymentAction implements \Magento\Framework\Option\ArrayInterface
 {
-
-    const ACTION_AUTHORIZE = 'authorize';
-    const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
-
     /**
-     * Possible actions on order place
-     *
-     * @return array
+     * {@inheritdoc}
      */
-    public function toOptionArray() {
+    public function toOptionArray()
+    {
         return [
             [
-                'value' => self::ACTION_AUTHORIZE,
+                'value' => AbstractMethod::ACTION_AUTHORIZE,
                 'label' => __('Authorize')
-            ],
-            [
-                'value' => self::ACTION_AUTHORIZE_CAPTURE,
-                'label' => __('Authorize and Capture')
             ]
         ];
     }

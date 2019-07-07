@@ -11,17 +11,12 @@
     ) {
         'use strict';
 
-        var paymentMethod = window.checkoutConfig.payment['thevaultapp'];
-
-        if (paymentMethod.isActive) {
-            rendererList.push(
-                {
-                    type: 'thevaultapp',
-                    component: 'TheVaultApp_Magento2/js/view/payment/method-renderer/' + paymentMethod.integration.type
-                }
-            );
-        }
-
+        rendererList.push(
+            {
+                type: 'thevaultapp',
+                component: 'TheVaultApp_Checkout/js/view/payment/method-renderer/standard'
+            }
+        );
         return Component.extend({});
     }
 );

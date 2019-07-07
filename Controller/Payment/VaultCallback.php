@@ -1,8 +1,13 @@
 <?php
 
 
-namespace TheVaultApp\Magento2\Controller\Payment;
+namespace TheVaultApp\Checkout\Controller\Payment;
 
+use DomainException;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -11,24 +16,15 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\HTTP\ZendClientFactory;
-use TheVaultApp\Magento2\Gateway\Config\Config as GatewayConfig;
-use TheVaultApp\Magento2\Model\Service\OrderService;
-use TheVaultApp\Magento2\Model\Ui\ConfigProvider;
-use TheVaultApp\Magento2\Model\Service\TokenChargeService;
-use TheVaultApp\Magento2\Helper\Helper;
+use TheVaultApp\Checkout\Gateway\Config\Config as GatewayConfig;
+use TheVaultApp\Checkout\Model\Ui\ConfigProvider;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
-use TheVaultApp\Magento2\Model\Adapter\ChargeAmountAdapter;
 use Magento\Sales\Api\OrderRepositoryInterface;
 
 
-class VaultCallback extends AbstractAction {
-
-    /**
-     * @var TokenChargeService
-     */
-    protected $tokenChargeService;
+class VaultCallback extends Action implements CsrfAwareActionInterface{
 
     /**
      * @var CheckoutSession
@@ -41,19 +37,9 @@ class VaultCallback extends AbstractAction {
     protected $orderInterface;
 
     /**
-     * @var OrderService
-     */
-    protected $orderService;
-
-    /**
      * @var CustomerSession
      */
     protected $customerSession;
-
-    /**
-     * @var Helper
-     */
-    protected $helper;
 
     /**
      * @var GatewayConfig
@@ -94,33 +80,25 @@ class VaultCallback extends AbstractAction {
      * @param CheckoutSession $checkoutSession
      * @param GatewayConfig $gatewayConfig
      * @param OrderInterface $orderInterface
-     * @param OrderService $orderService
      * @param Order $orderManager
-     * @param Helper $helper
      */
     public function __construct(
         Context $context,
         CheckoutSession $checkoutSession,
         GatewayConfig $gatewayConfig,
-        OrderService $orderService,
         OrderInterface $orderInterface,
         CustomerSession $customerSession,
-        TokenChargeService $tokenChargeService,
-        Helper $helper,
         JsonFactory $resultJsonFactory,
         ZendClientFactory $httpClientFactory,
         InvoiceService $invoiceService,
         InvoiceRepositoryInterface $invoiceRepository,
         OrderRepositoryInterface $orderRepository
     ) {
-        parent::__construct($context, $gatewayConfig);
+        parent::__construct($context);
 
         $this->checkoutSession        = $checkoutSession;
         $this->customerSession        = $customerSession;
-        $this->orderService           = $orderService;
         $this->orderInterface         = $orderInterface;
-        $this->tokenChargeService     = $tokenChargeService;
-        $this->helper                 = $helper;
         $this->gatewayConfig          = $gatewayConfig;
         $this->resultJsonFactory      = $resultJsonFactory;
         $this->httpClientFactory      = $httpClientFactory;
@@ -129,19 +107,59 @@ class VaultCallback extends AbstractAction {
         $this->orderRepository        = $orderRepository;
     }
 
+    /** 
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(
+        RequestInterface $request 
+    ): ?InvalidRequestException {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
+
     /**
      * Handles the controller method.
      *
      */
     public function execute() {
-        $obj = json_decode(file_get_contents('php://input'), true);
-        $order = $this->getAssociatedOrder($obj['subid1']);
-        $payment    = $order->getPayment();
-        $status = strtolower(trim($obj['status']));
-        $methodId   = $payment->getMethodInstance()->getCode();
+        $request_text = file_get_contents('php://input');
+        file_put_contents('callback.txt', $request_text);
+        $obj = [];
+        $order = null;
+        $payment = null;
+        $status = '';
+        $methodId = null;
+        try {
+            $obj = json_decode($request_text, true);
+            $order = isset($obj['subid1']) ? $this->getAssociatedOrder($obj['subid1']) : null;
+            if (!is_null($order)) {
+                $payment = $order->getPayment();
+                $status = strtolower(trim($obj['status']));
+                $methodId = $payment->getMethodInstance()->getCode();
+            }
+        } catch (\Exception $ex) {
+
+        }
+
+        if (is_null($order)) {
+            return $this->resultJsonFactory->create()->setData([
+                "status" => "failed",
+                "request_text" => $request_text
+            ]);
+        }
+
+
         // Update order status
         //$order->setStatus($this->gatewayConfig->getOrderStatusComplete());
-        if ($status === 'approved') {
+
+        if ($status == 'approved') {
             $order->setStatus('complete');
         } else {
             $order->setStatus('canceled');
@@ -160,9 +178,9 @@ class VaultCallback extends AbstractAction {
         }
 
 
-        if ($status === 'approved') {
+        if ($status == 'approved') {
             // Create new comment
-            $newComment = 'Authorized amount of ' . ChargeAmountAdapter::getStoreAmountOfCurrency($obj['amount'] * 100, 'USD') . ' ' . 'USD' . ' Transaction ID: ' . $obj['tid'];
+            $newComment = 'Authorized amount of ' . $this->getStoreAmountOfCurrency($obj['amount'] * 100, 'USD') . ' ' . 'USD' . ' Transaction ID: ' . $obj['tid'];
 
             // Add the new comment
             $order->addStatusToHistory($order->getStatus(), $newComment, $notify = true);
@@ -171,7 +189,7 @@ class VaultCallback extends AbstractAction {
             // Create the invoice
             //if ($order->canInvoice() && ($this->gatewayConfig->getAutoGenerateInvoice())) {
             // Generate the invoice
-            $amount = ChargeAmountAdapter::getStoreAmountOfCurrency(
+            $amount = $this->getStoreAmountOfCurrency(
                 $obj['amount'] * 100,
                 'USD'
             );
@@ -185,7 +203,9 @@ class VaultCallback extends AbstractAction {
             $this->invoiceRepository->save($invoice);
         }
         $this->orderRepository->save($order);
-        //exit();
+        return $this->resultJsonFactory->create()->setData([
+            "status" => $status,
+        ]);        
     }
 
     /**
@@ -196,9 +216,22 @@ class VaultCallback extends AbstractAction {
      */
     private function getAssociatedOrder($orderId) {
         $order = $this->orderInterface->loadByIncrementId($orderId);
-        if($order->isEmpty()) {
+        if(!isset($order) || is_null($order) || $order->isEmpty()) {
             throw new DomainException('The order does not exists.');
         }
         return $order;
+    }
+
+    /**
+     * Returns transformed amount by the given currency code which can be handled by the store.
+     *
+     * @param string|int $amount Value from the gateway.
+     * @param $currencyCode
+     * @return float
+     */
+    public static function getStoreAmountOfCurrency($amount, $currencyCode) {
+        $currencyCode   = strtoupper($currencyCode);
+        $amount         = (int) $amount;
+        return (float) ($amount / 100);
     }
 }

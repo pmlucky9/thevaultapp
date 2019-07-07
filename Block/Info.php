@@ -1,20 +1,36 @@
 <?php
-
- 
-namespace TheVaultApp\Magento2\Block;
+namespace TheVaultApp\Checkout\Block;
 
 use Magento\Framework\Phrase;
 use Magento\Payment\Block\ConfigurableInfo;
+use TheVaultApp\Checkout\Gateway\Response\FraudHandler;
 
-class Info extends ConfigurableInfo {
-
+class Info extends ConfigurableInfo
+{
     /**
-     * Returns translated label.
+     * Returns label
      *
      * @param string $field
      * @return Phrase
      */
-    protected function getLabel($field) {
+    protected function getLabel($field)
+    {
         return __($field);
+    }
+
+    /**
+     * Returns value view
+     *
+     * @param string $field
+     * @param string $value
+     * @return string | Phrase
+     */
+    protected function getValueView($field, $value)
+    {
+        switch ($field) {
+            case FraudHandler::FRAUD_MSG_LIST:
+                return implode('; ', $value);
+        }
+        return parent::getValueView($field, $value);
     }
 }

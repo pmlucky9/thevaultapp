@@ -2,7 +2,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
     <router id="standard">
         <route id="thevaultapp" frontName="thevaultapp">
-            <module name="TheVaultApp_Magento2" />
+            <module name="TheVaultApp_Checkout" />
         </route>
     </router>
 </config>

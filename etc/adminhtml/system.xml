@@ -30,7 +30,7 @@
 
                     <field id="environment" translate="label" sortOrder="10" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Environment</label>
-                        <source_model>TheVaultApp\Magento2\Model\Adminhtml\Source\Environment</source_model>
+                        <source_model>TheVaultApp\Checkout\Model\Adminhtml\Source\Environment</source_model>
                         <config_path>payment/thevaultapp/environment</config_path>
                     </field>
 
@@ -39,55 +39,6 @@
                         <config_path>payment/thevaultapp/title</config_path>
                         <comment>Payment method title displayed to shoppers.</comment>
                     </field>
-
-                    <!--
-                    <field id="integration" translate="label" sortOrder="40" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Integration</label>
-                        <source_model>TheVaultApp\Magento2\Model\Adminhtml\Source\Integration</source_model>
-                        <config_path>payment/thevaultapp/integration</config_path>
-                    </field>
-                    -->
-
-                    <!--
-                    <field id="theme_color" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Theme color</label>
-                        <config_path>payment/thevaultapp/theme_color</config_path>
-                        <comment>Provide a color code in hexadecimal format. Ex: #00b660.</comment>
-                        <depends>
-                            <field id="integration">hosted</field>
-                        </depends>
-                    </field>
-                    -->
-
-                    <!--
-                 	<field id="button_label" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Button label</label>
-                        <config_path>payment/thevaultapp/button_label</config_path>
-                        <depends>
-                            <field id="integration">hosted</field>
-                        </depends>
-                    </field>
-                    -->
-
-                    <!--
-                 	<field id="box_title" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Payment window title</label>
-                        <config_path>payment/thevaultapp/box_title</config_path>
-                        <depends>
-                            <field id="integration">hosted</field>
-                        </depends>
-                    </field>
-                    -->
-
-                    <!--
-                 	<field id="box_subtitle" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Payment window subtitle</label>
-                        <config_path>payment/thevaultapp/box_subtitle</config_path>
-                        <depends>
-                            <field id="integration">hosted</field>
-                        </depends>
-                    </field>
-                    -->
                 </group>
 
                 <group id="thevaultapp_advanced_settings" translate="label" showInDefault="1" showInWebsite="1" sortOrder="3">
@@ -126,18 +77,6 @@
                         <config_path>payment/thevaultapp/store</config_path>
                     </field>
 
-                    <field id="businessname" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Business Name</label>
-                        <config_path>payment/thevaultapp/businessname</config_path>
-                    </field>
-
-                    <!--
-                    <field id="subid1" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Sub ID</label>
-                        <config_path>payment/thevaultapp/subid1</config_path>
-                    </field>
-                    -->
-
                     <field id="public_key" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Api Url</label>
                         <config_path>payment/thevaultapp/public_key</config_path>
@@ -152,24 +91,10 @@
                 <group id="thevaultapp_callback_urls" translate="label" showInDefault="1" showInWebsite="1" sortOrder="8">
                     <label>Callbacks URLs</label>
 
-                    <field id="webhook_url" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <!--
-                        <label>Webhook Url</label>
-                        -->
+                    <field id="webhook_url" translate="label" sortOrder="0" type="text" showInDefault="1" showInWebsite="1" showInStore="1">                       
                         <label>Verify Callback</label>
-                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\WebhookUrl</frontend_model>
+                        <frontend_model>TheVaultApp\Checkout\Block\Adminhtml\System\Config\Field\RedirectUrl</frontend_model>
                     </field>
-                    <!--
-                    <field id="redirection_url" translate="label" sortOrder="10" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Redirection Url</label>
-                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\RedirectionUrl</frontend_model>
-                    </field>
-
-                    <field id="redirection_fail_url" translate="label" sortOrder="20" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Redirection Fail Url</label>
-                        <frontend_model>TheVaultApp\Magento2\Block\Adminhtml\System\Config\Field\RedirectionFailUrl</frontend_model>
-                    </field>
-                    -->
                 </group>
 
                 <group id="admin_method_settings" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="12">

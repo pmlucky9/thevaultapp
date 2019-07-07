@@ -1,8 +1,8 @@
 <?php
 
+namespace TheVaultApp\Checkout\Controller\Payment;
 
-namespace TheVaultApp\Magento2\Controller\Payment;
-
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -11,18 +11,10 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\HTTP\ZendClientFactory;
-use TheVaultApp\Magento2\Gateway\Config\Config as GatewayConfig;
-use TheVaultApp\Magento2\Model\Service\OrderService;
-use TheVaultApp\Magento2\Model\Ui\ConfigProvider;
-use TheVaultApp\Magento2\Model\Service\TokenChargeService;
-use TheVaultApp\Magento2\Helper\Helper;
+use TheVaultApp\Checkout\Gateway\Config\Config as GatewayConfig;
+use TheVaultApp\Checkout\Model\Ui\ConfigProvider;
 
-class VaultRequestOrder extends AbstractAction {
-
-    /**
-     * @var TokenChargeService
-     */
-    protected $tokenChargeService;
+class VaultRequestOrder extends Action {
 
     /**
      * @var CheckoutSession
@@ -35,19 +27,9 @@ class VaultRequestOrder extends AbstractAction {
     protected $orderInterface;
 
     /**
-     * @var OrderService
-     */
-    protected $orderService;
-
-    /**
      * @var CustomerSession
      */
     protected $customerSession;
-
-    /**
-     * @var Helper
-     */
-    protected $helper;
 
     /**
      * @var GatewayConfig
@@ -64,37 +46,30 @@ class VaultRequestOrder extends AbstractAction {
      */
     protected $httpClientFactory;
 
-
     /**
      * PlaceOrder constructor.
      * @param Context $context
      * @param CheckoutSession $checkoutSession
      * @param GatewayConfig $gatewayConfig
      * @param OrderInterface $orderInterface
-     * @param OrderService $orderService
-     * @param Order $orderManager
-     * @param Helper $helper
+     * @param CustomerSession $customerSession
+     * @param JsonFactory $resultJsonFactory
+     * @param ZendClientFactory $httpClientFactory
      */
     public function __construct(
         Context $context,
         CheckoutSession $checkoutSession,
         GatewayConfig $gatewayConfig,
-        OrderService $orderService,
         OrderInterface $orderInterface,
         CustomerSession $customerSession,
-        TokenChargeService $tokenChargeService,
-        Helper $helper,
         JsonFactory $resultJsonFactory,
         ZendClientFactory $httpClientFactory
     ) {
-        parent::__construct($context, $gatewayConfig);
+        parent::__construct($context);
 
         $this->checkoutSession        = $checkoutSession;
         $this->customerSession        = $customerSession;
-        $this->orderService           = $orderService;
         $this->orderInterface         = $orderInterface;
-        $this->tokenChargeService     = $tokenChargeService;
-        $this->helper                 = $helper;
         $this->gatewayConfig          = $gatewayConfig;
         $this->resultJsonFactory      = $resultJsonFactory;
         $this->httpClientFactory      = $httpClientFactory;
@@ -105,11 +80,10 @@ class VaultRequestOrder extends AbstractAction {
      *
      */
     public function execute() {
-        // Retrieve the request parameters
+        // Retrieve the request parameters        
         $api_url = $this->gatewayConfig->getPublicKey();
         $token = $this->gatewayConfig->getSecretKey();
-        $store = $this->gatewayConfig->getStore();
-        $businessname =  $this->gatewayConfig->getBusinessName();
+        $store = $this->gatewayConfig->getStore();        
         $quantity = 1;
         $phone = $this->getRequest()->getParam('phone');
 
@@ -119,7 +93,7 @@ class VaultRequestOrder extends AbstractAction {
 
         if (isset($orderTrackId)) {
             $order = $this->orderInterface->loadByIncrementId($orderTrackId);
-        }
+        }        
 
         if ($order) {
             $subid1 = $orderTrackId;
@@ -128,7 +102,6 @@ class VaultRequestOrder extends AbstractAction {
             $params = array (
                 'token' => $token,
                 'store' => $store,
-                'businessname' => $businessname,
                 'quantity' => $quantity,
                 'subid1' => $subid1,
                 'phone' => $phone,
@@ -141,6 +114,7 @@ class VaultRequestOrder extends AbstractAction {
             $client->setHeaders('Accept','application/json');
             $client->setRawData(json_encode($params), 'application/json');
             $response= $client->request('POST');
+            
             try {
                 $result = json_decode($response->getBody(), true);
                 if ($result['status'] == 'ok') {
@@ -149,7 +123,6 @@ class VaultRequestOrder extends AbstractAction {
                         'data' => [
                             'token' => $token,
                             'store' => $store,
-                            'businessname' => $businessname,
                             'quantity' => $quantity,
                             'subid1' => $subid1,
                             'requestid' => $result['data']['requestid'],
@@ -163,7 +136,6 @@ class VaultRequestOrder extends AbstractAction {
                         'data' => [
                             'token' => $token,
                             'store' => $store,
-                            'businessname' => $businessname,
                             'quantity' => $quantity,
                             'subid1' => $subid1,
                             'amount' => $amount,
@@ -171,14 +143,13 @@ class VaultRequestOrder extends AbstractAction {
                     ], $result);
                     return $this->resultJsonFactory->create()->setData($result);
                 }
-            } catch(Exception $err) {
+            } catch(\Exception $err) {
                 return $this->resultJsonFactory->create()->setData([
                     "status" => 'error',
                     "errors" => 'json parse error',
                     'data' => [
                         'token' => $token,
                         'store' => $store,
-                        'businessname' => $businessname,
                         'quantity' => $quantity,
                         'subid1' => $subid1,
                         'amount' => $amount,

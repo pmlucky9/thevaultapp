@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TheVaultApp\Magento2\Model\Adminhtml\Source;
+namespace TheVaultApp\Checkout\Model\Adminhtml\Source;
 
 use Magento\Framework\Option\ArrayInterface;
 

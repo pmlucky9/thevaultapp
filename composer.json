@@ -1,32 +1,22 @@
 {
-    "name": "thevaultapp/magento2-extension",
+    "name": "thevaultapp/magento2",
     "description": "TheVaultApp Payment Gateway for Magento 2",
     "require": {
-        "php": "~7.0.13|~7.1.0|~7.2.0",
+        "php": "~7.0|~7.1|~7.2",
         "magento/framework": ">=100.1.0",
-        "magento/module-sales": ">=101.0.*",
-        "magento/module-checkout": ">=100.2.*",
-        "magento/module-payment": ">=100.2.*",
-        "magento/module-vault": ">=100.2.*"
+        "magento/module-sales": ">=101.0.0",
+        "magento/module-checkout": ">=100.2.0",
+        "magento/module-payment": ">=100.2.0",
+        "magento/module-vault": ">=100.2.0"
     },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://repo.magento.com/"
-        },      
-        {
-          "type": "vcs",
-          "url": "https://github.com/pmlucky9/thevaultapp_magento2"
-        }
-    ],    
     "type": "magento2-module",
-    "version": "1.0.3",
+    "version": "1.1.0",
     "autoload": {
         "files": [
             "registration.php"
         ],
         "psr-4": {
-            "TheVaultApp\\Magento2\\": ""
+            "TheVaultApp\\Checkout\\": ""
         }
     }
 }

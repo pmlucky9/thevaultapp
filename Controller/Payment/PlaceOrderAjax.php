@@ -1,19 +1,22 @@
 <?php
 
 
-namespace TheVaultApp\Magento2\Controller\Payment;
+namespace TheVaultApp\Checkout\Controller\Payment;
 
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\Stdlib\CookieManagerInterface;
 use Magento\Quote\Model\QuoteManagement;
 use Magento\Framework\Controller\Result\JsonFactory;
-use TheVaultApp\Magento2\Model\Ui\ConfigProvider;
-use TheVaultApp\Magento2\Model\Service\OrderService;
-use TheVaultApp\Magento2\Gateway\Config\Config as GatewayConfig;
-use TheVaultApp\Magento2\Helper\Helper;
+use Magento\Customer\Api\Data\GroupInterface;
+use TheVaultApp\Checkout\Model\Ui\ConfigProvider;
+use TheVaultApp\Checkout\Gateway\Config\Config as GatewayConfig;
 
-class PlaceOrderAjax extends AbstractAction {
+class PlaceOrderAjax extends Action {
+    
+    const EMAIL_COOKIE_NAME = 'thevaultappEmail';
 
     /**
      * @var QuoteManagement
@@ -26,11 +29,6 @@ class PlaceOrderAjax extends AbstractAction {
     protected $checkoutSession;
 
     /**
-     * @var OrderService
-     */
-    protected $orderService;
-
-    /**
      * @var CustomerSession
      */
     protected $customerSession;
@@ -41,37 +39,36 @@ class PlaceOrderAjax extends AbstractAction {
     protected $resultJsonFactory;
 
     /**
-     * @var Helper
+     * @var CookieManagerInterface
      */
-    protected $helper;
+    protected $cookieManager;
 
     /**
      * PlaceOrder constructor.
      * @param Context $context
      * @param CheckoutSession $checkoutSession
      * @param GatewayConfig $gatewayConfig
-     * @param OrderService $orderService
+     * @param CustomerSession $customerSession
+     * @param QuoteManagement $quoteManagement
+     * @param CookieManagerInterface $cookieManager
      * @param JsonFactory $resultJsonFactory
-     * @param Helper $helper
      */
     public function __construct(
         Context $context,
         CheckoutSession $checkoutSession,
         GatewayConfig $gatewayConfig,
-        OrderService $orderService,
         CustomerSession $customerSession,
-        QuoteManagement $quoteManagement, 
-        JsonFactory $resultJsonFactory,
-        Helper $helper
+        QuoteManagement $quoteManagement,
+        CookieManagerInterface $cookieManager,
+        JsonFactory $resultJsonFactory        
     ) {
-        parent::__construct($context, $gatewayConfig);
-
+        parent::__construct($context);
+        
         $this->checkoutSession   = $checkoutSession;
         $this->customerSession   = $customerSession;
-        $this->orderService      = $orderService;
         $this->quoteManagement   = $quoteManagement;
         $this->resultJsonFactory = $resultJsonFactory;
-        $this->helper            = $helper;
+        $this->cookieManager = $cookieManager;
     }
 
     /**
@@ -79,21 +76,13 @@ class PlaceOrderAjax extends AbstractAction {
      *
      * @return \Magento\Framework\Controller\Result\Redirect
      */
-    public function execute() {
-        // Prepare the redirection
-        $resultRedirect = $this->getResultRedirect();
-
+    public function execute() {        
         // Load the customer quote
         $quote          = $this->checkoutSession->getQuote();
 
-        // Retrieve the request parameters
-        $cardToken      = $this->getRequest()->getParam('cko-card-token');
-        $email          = $this->getRequest()->getParam('cko-context-id');
-        $agreement      = array_keys($this->getRequest()->getPostValue('agreement', []));
-
         // Check for guest email
         if ($this->customerSession->isLoggedIn() === false) {
-            $quote = $this->helper->prepareGuestQuote($quote);
+            $quote = $this->prepareGuestQuote($quote);
         }
 
         // Prepare session quote info for redirection after payment
@@ -120,4 +109,31 @@ class PlaceOrderAjax extends AbstractAction {
             'trackId' => $order->getIncrementId()
         ]);
     }
+
+    /**
+     * Sets the email for guest users
+     *
+     * @return bool
+     */
+    public function prepareGuestQuote($quote, $email = null) {
+        
+        // Retrieve the user email 
+        $guestEmail = $email
+        ?? $this->customerSession->getData('checkoutSessionData')['customerEmail']
+        ?? $quote->getCustomerEmail() 
+        ?? $quote->getBillingAddress()->getEmail()
+        ?? $this->cookieManager->getCookie(self::EMAIL_COOKIE_NAME);
+
+        // Set the quote as guest
+        $quote->setCustomerId(null)
+        ->setCustomerEmail($guestEmail)
+        ->setCustomerIsGuest(true)
+        ->setCustomerGroupId(GroupInterface::NOT_LOGGED_IN_ID);
+
+        // Delete the cookie
+        $this->cookieManager->deleteCookie(self::EMAIL_COOKIE_NAME);
+
+        return $quote;
+    }    
+
 }
